@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro Simples</title>
+    
+    <style>
+        body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; }
+        input { width: 100%; margin-bottom: 10px; padding: 8px; display: block; }
+        button { width: 100%; padding: 10px; background: blue; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h3>Cadastro</h3>
+        <input type="text" placeholder="Nome">
+        <input type="text" id="cpf" placeholder="CPF">
+        <button onclick="salvar()">Enviar</button>
+    </div>
+
+    <script>
+        function salvar() {
+            alert("Cadastro enviado!");
+        }
+    </script>
+
+</body>
+</html>
