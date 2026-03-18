@@ -3,94 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Hub Pro - Edição Ultimate</title>
+    <title>Space Hub Pro - Bigode Memo</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --neon: #00f2ff;
-            --purple: #bc13fe;
+            --purple: #7000ff;
             --glass: rgba(255, 255, 255, 0.05);
         }
 
         body {
-            margin: 0; padding: 40px 20px; font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Poppins', sans-serif;
             background: radial-gradient(circle at center, #1a1a2e 0%, #050505 100%);
-            color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
 
+        /* Efeito de Estrelas no Fundo */
         body::before {
-            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: url('https://www.transparenttextures.com/patterns/stardust.png');
-            z-index: -1; opacity: 0.4;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(0.5deg); }
         }
 
         .container {
-            background: var(--glass); backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 242, 255, 0.3); padding: 40px; border-radius: 30px;
-            width: 100%; max-width: 600px; box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            padding: 40px;
+            border-radius: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
             animation: float 6s ease-in-out infinite;
+            position: relative;
         }
 
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            color: var(--neon);
+            text-shadow: 0 0 15px var(--neon);
+            margin-bottom: 35px;
+            letter-spacing: 3px;
+        }
 
-        h2 { font-family: 'Orbitron'; text-align: center; color: var(--neon); text-shadow: 0 0 15px var(--neon); margin-bottom: 30px; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .full { grid-column: span 2; }
 
+        label { font-size: 10px; color: var(--neon); text-transform: uppercase; margin-left: 5px; }
+
         input {
-            width: 100%; padding: 12px; background: rgba(0,0,0,0.6); border: 1px solid #333;
-            border-radius: 8px; color: var(--neon); font-family: 'Orbitron'; outline: none; box-sizing: border-box;
+            width: 100%;
+            padding: 14px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #222;
+            border-radius: 10px;
+            color: var(--neon);
+            font-family: 'Orbitron', sans-serif;
+            outline: none;
+            box-sizing: border-box;
+            transition: 0.4s;
         }
 
-        input:focus { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); }
-
-        .btn {
-            width: 100%; padding: 15px; margin-top: 20px; font-family: 'Orbitron'; font-weight: bold;
-            cursor: pointer; border-radius: 10px; transition: 0.3s; text-transform: uppercase;
+        input:focus {
+            border-color: var(--neon);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+            background: rgba(0, 242, 255, 0.05);
         }
 
-        .btn-launch { border: 2px solid var(--neon); background: transparent; color: var(--neon); }
-        .btn-launch:hover { background: var(--neon); color: black; box-shadow: 0 0 20px var(--neon); }
-
-        .btn-download { 
-            border: 2px solid var(--purple); background: transparent; color: var(--purple); 
-            max-width: 300px; margin: 30px auto; 
+        .btn-neon {
+            width: 100%;
+            padding: 20px;
+            margin-top: 30px;
+            background: transparent;
+            border: 2px solid var(--neon);
+            color: var(--neon);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: 0.3s;
+            text-transform: uppercase;
         }
-        .btn-download:hover { background: var(--purple); color: white; box-shadow: 0 0 20px var(--purple); }
 
-        .list-section { width: 100%; max-width: 800px; margin-top: 40px; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        tr { background: rgba(255,255,255,0.03); transition: 0.3s; }
-        tr:hover { background: rgba(0, 242, 255, 0.08); }
-        td, th { padding: 15px; text-align: left; }
-        .actions button { cursor: pointer; border: none; padding: 5px 10px; border-radius: 4px; margin-right: 5px; font-weight: bold; }
-        .edit-btn { background: var(--neon); }
-        .del-btn { background: #ff4d4d; color: white; }
+        .btn-neon:hover {
+            background: var(--neon);
+            color: #000;
+            box-shadow: 0 0 30px var(--neon);
+        }
+
+        /* Lista de Tripulantes */
+        .list-section { width: 100%; max-width: 800px; margin-top: 60px; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        th { color: var(--neon); font-family: 'Orbitron'; padding: 10px; text-align: left; font-size: 12px; }
+        
+        tr.row-card { 
+            background: rgba(255,255,255,0.03); 
+            transition: 0.3s;
+        }
+        
+        tr.row-card:hover { background: rgba(0, 242, 255, 0.1); transform: scale(1.02); }
+
+        td { padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        td:first-child { border-left: 1px solid rgba(255,255,255,0.1); border-radius: 15px 0 0 15px; }
+        td:last-child { border-right: 1px solid rgba(255,255,255,0.1); border-radius: 0 15px 15px 0; }
+
+        .actions button { cursor: pointer; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; margin-right: 5px; }
+        .edit-btn { background: var(--neon); color: black; }
+        .del-btn { background: #ff3e3e; color: white; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Terminal de Comando</h2>
+        <h2 id="form-title">Registro de Tripulação</h2>
         <form id="spaceForm">
             <input type="hidden" id="editId">
             <div class="grid">
-                <div class="input-group full"><input type="text" id="nome" placeholder="NOME DO TRIPULANTE" required></div>
-                <div class="input-group"><input type="text" id="cpf" placeholder="CPF"></div>
-                <div class="input-group"><input type="text" id="cep" placeholder="CEP" onblur="apiCEP(this.value)"></div>
-                <div class="input-group full"><input type="text" id="rua" placeholder="ENDEREÇO"></div>
-                <div class="input-group full"><input type="text" id="cidade" placeholder="PLANETA/CIDADE"></div>
+                <div class="input-group full">
+                    <label>Nome do Operador</label>
+                    <input type="text" id="nome" placeholder="NOME COMPLETO" required>
+                </div>
+                <div class="input-group">
+                    <label>Identificação (CPF)</label>
+                    <input type="text" id="cpf" placeholder="000.000.000-00" required>
+                </div>
+                <div class="input-group">
+                    <label>Código Postal (CEP)</label>
+                    <input type="text" id="cep" placeholder="00000-000" maxlength="9" onblur="apiCEP(this.value)">
+                </div>
+                <div class="input-group full">
+                    <label>Coordenada Residencial (Rua)</label>
+                    <input type="text" id="rua">
+                </div>
+                <div class="input-group">
+                    <label>Setor (Bairro)</label>
+                    <input type="text" id="bairro">
+                </div>
+                <div class="input-group">
+                    <label>Planeta/Cidade</label>
+                    <input type="text" id="cidade">
+                </div>
             </div>
-            <button type="submit" id="mainBtn" class="btn btn-launch">Lançar Dados</button>
+            <button type="submit" id="mainBtn" class="btn-neon">Iniciar Lançamento</button>
         </form>
     </div>
 
-    <button class="btn btn-download" onclick="baixarDados()">📥 Extrair Log de Dados (.txt)</button>
-
     <div class="list-section">
+        <h3 style="font-family: 'Orbitron'; color: var(--neon);">Frota em Órbita</h3>
         <table id="tabela">
-            <thead><tr><th>Nome</th><th>Identificação</th><th>Base</th><th>Ações</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Localização</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
             <tbody id="listaCorpo"></tbody>
         </table>
     </div>
@@ -98,33 +182,112 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <script>
+        // --- MOTOR DE ÁUDIO (Sintetizador Web) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(f, t) {
-            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            osc.start(); osc.stop(audioCtx.currentTime + t);
+        
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if(type === 'beep') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } else if(type === 'laser') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            }
         }
 
+        // Tocar som ao digitar
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keydown', () => playSound('beep'));
+        });
+
+        // --- LÓGICA DO SISTEMA ---
         let db = JSON.parse(localStorage.getItem('space_db')) || [];
 
-        function apiCEP(v) {
-            fetch(`https://viacep.com.br/ws/${v.replace(/\D/g,'')}/json/`).then(r => r.json()).then(d => {
-                if(!d.erro) {
-                    document.getElementById('rua').value = d.logradouro;
-                    document.getElementById('cidade').value = d.localidade;
-                    playSound(600, 0.1);
-                }
-            });
+        function apiCEP(val) {
+            let cep = val.replace(/\D/g, '');
+            if(cep.length === 8) {
+                fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json()).then(d => {
+                    if(!d.erro) {
+                        document.getElementById('rua').value = d.logradouro;
+                        document.getElementById('bairro').value = d.bairro;
+                        document.getElementById('cidade').value = d.localidade;
+                        playSound('beep');
+                    }
+                });
+            }
         }
 
         document.getElementById('spaceForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            playSound(1000, 0.2);
+            playSound('laser');
+            
             const id = document.getElementById('editId').value;
-            const tripulante = {
-                id: id || Date.now().toString(),
+            const cliente = {
+                id: id ? id : Date.now().toString(),
                 nome: document.getElementById('nome').value,
                 cpf: document.getElementById('cpf').value,
                 cidade: document.getElementById('cidade').value
+            };
+
+            if(id) {
+                const idx = db.findIndex(c => c.id === id);
+                db[idx] = cliente;
+            } else {
+                db.push(cliente);
+                confetti({ particleCount: 150, spread: 80, colors: ['#00f2ff', '#7000ff'] });
+            }
+
+            localStorage.setItem('space_db', JSON.stringify(db));
+            this.reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('mainBtn').innerText = 'Iniciar Lançamento';
+            render();
+        });
+
+        function render() {
+            const list = document.getElementById('listaCorpo');
+            list.innerHTML = db.map(c => `
+                <tr class="row-card">
+                    <td>${c.nome}</td>
+                    <td>${c.cpf}</td>
+                    <td>${c.cidade}</td>
+                    <td class="actions">
+                        <button class="edit-btn" onclick="editar('${c.id}')">EDITAR</button>
+                        <button class="del-btn" onclick="excluir('${c.id}')">X</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function excluir(id) {
+            playSound('beep');
+            db = db.filter(c => c.id !== id);
+            localStorage.setItem('space_db', JSON.stringify(db));
+            render();
+        }
+
+        function editar(id) {
+            playSound('beep');
+            const c = db.find(cli => cli.id === id);
+            document.getElementById('nome').value = c.nome;
+            document.getElementById('cpf').value = c.cpf;
+            document.getElementById('cidade').value = c.cidade;
+            document.getElementById('editId').value = c.id;
+            document.getElementById('mainBtn').innerText = 'Confirmar Alteração';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        render();
+    </script>
+</body>
+</html>
