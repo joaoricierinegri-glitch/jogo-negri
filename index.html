@@ -1,40 +1,180 @@
-<div class="container">
-    <form id="form-cadastro">
-        <h2>Cadastro Premium</h2>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro Premium 3D</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #e0e5ec;
+            --shadow-light: #ffffff;
+            --shadow-dark: #a3b1c6;
+        }
+
+        body {
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Container com efeito 3D e Neumorfismo */
+        .card-3d {
+            background: var(--bg);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 20px 20px 60px var(--shadow-dark), 
+                       -20px -20px 60px var(--shadow-light);
+            width: 100%;
+            max-width: 450px;
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .card-3d:hover {
+            transform: translateY(-5px) scale(1.01);
+        }
+
+        h2 {
+            text-align: center;
+            color: #444;
+            font-weight: 800;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        /* Inputs "entalhados" no fundo (Efeito Inset) */
+        input {
+            width: 100%;
+            padding: 15px;
+            background: var(--bg);
+            border: none;
+            border-radius: 12px;
+            box-shadow: inset 6px 6px 12px var(--shadow-dark), 
+                        inset -6px -6px 12px var(--shadow-light);
+            box-sizing: border-box;
+            outline: none;
+            color: #555;
+            font-size: 16px;
+        }
+
+        input:focus {
+            box-shadow: inset 2px 2px 5px var(--shadow-dark), 
+                        inset -2px -2px 5px var(--shadow-light);
+            border: 1px solid var(--primary);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #777;
+        }
+
+        /* Botão 3D que "afunda" ao clicar */
+        .btn-3d {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 6px 6px 12px #b8b9be, 
+                       -6px -6px 12px #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .btn-3d:active {
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.2);
+            transform: scale(0.98);
+        }
+
+        /* Tabela flutuante */
+        .lista-container {
+            margin-top: 50px;
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th { padding: 15px; color: var(--primary); border-bottom: 2px solid #ddd; }
+        td { padding: 15px; text-align: center; color: #555; border-bottom: 1px solid #eee; }
+
+    </style>
+</head>
+<body>
+
+    <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
         
-        <div class="input-group">
-            <label for="nome">Nome Completo</label>
-            <input type="text" id="nome" required>
+        <div class="card-3d">
+            <h2>Cadastro</h2>
+            <form id="form">
+                <div class="input-group">
+                    <label>NOME COMPLETO</label>
+                    <input type="text" id="nome" placeholder="Digite seu nome..." required>
+                </div>
+                <div class="input-group">
+                    <label>CPF</label>
+                    <input type="text" id="cpf" placeholder="000.000.000-00" required>
+                </div>
+                <button type="submit" class="btn-3d">FINALIZAR CADASTRO</button>
+            </form>
         </div>
 
-        <div class="row">
-            <div class="input-group">
-                <label for="cep">CEP (Digite para buscar)</label>
-                <input type="text" id="cep" maxlength="9" placeholder="00000-000" required>
-            </div>
-            <div class="input-group">
-                <label for="logradouro">Rua</label>
-                <input type="text" id="logradouro" readonly>
-            </div>
+        <div class="lista-container">
+            <h3 style="text-align: center; color: #666;">Clientes Ativos</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-corpo">
+                    </tbody>
+            </table>
         </div>
+    </div>
 
-        <div class="row">
-            <div class="input-group">
-                <label for="bairro">Bairro</label>
-                <input type="text" id="bairro" readonly>
-            </div>
-            <div class="input-group">
-                <label for="cidade">Cidade</label>
-                <input type="text" id="cidade" readonly>
-            </div>
-        </div>
+    <script>
+        const form = document.getElementById('form');
+        const tabela = document.getElementById('tabela-corpo');
 
-        <button type="submit" class="btn-submit">Finalizar Cadastro</button>
-    </form>
-</div>
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('nome').value;
+            const cpf = document.getElementById('cpf').value;
 
-<div class="container" style="margin-top: 20px; max-width: 900px;">
-    <h3>Lista de Clientes Salvos</h3>
-    <div id="lista-cards" class="grid-clientes">
-        </div>
-</div>
+            const novaLinha = `<tr><td>${nome}</td><td>${cpf}</td></tr>`;
+            tabela.innerHTML += novaLinha;
+
+            form.reset();
+        });
+    </script>
+</body>
+</html>
