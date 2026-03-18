@@ -1,38 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('form-cadastro');
-    const inputCpf = document.getElementById('cpf');
-    const inputTel = document.getElementById('telefone');
+    const cepInput = document.getElementById('cep');
+    
+    // 1. BUSCA AUTOMÁTICA DE CEP
+    cepInput.addEventListener('blur', async () => {
+        let cep = cepInput.value.replace(/\D/g, '');
+        if (cep.length !== 8) return;
 
-    // Máscara para CPF (000.000.000-00)
-    inputCpf.addEventListener('input', (e) => {
-        let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
-        if (value.length <= 11) {
-            value = value.replace(/(\Step1\d{3})(\d)/, '$1.$2');
-            value = value.replace(/(\d{3})(\d)/, '$1.$2');
-            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        try {
+            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const data = await response.json();
+
+            if (!data.erro) {
+                document.getElementById('logradouro').value = data.logradouro;
+                document.getElementById('bairro').value = data.bairro;
+                document.getElementById('cidade').value = data.localidade;
+            } else {
+                alert("CEP não encontrado.");
+            }
+        } catch (error) {
+            console.error("Erro ao buscar CEP");
         }
-        e.target.value = value;
     });
 
-    // Máscara para Telefone ((00) 00000-0000)
-    inputTel.addEventListener('input', (e) => {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length <= 11) {
-            value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
-            value = value.replace(/(\d{5})(\d)/, '$1-$2');
-        }
-        e.target.value = value;
-    });
-
-    // Simulação de Envio
+    // 2. SALVAR E PERSISTIR DADOS (LocalStorage)
     form.addEventListener('submit', (e) => {
-        e.preventDefault(); // Impede o recarregamento da página
+        e.preventDefault();
 
-        const nome = document.getElementById('nome').value;
-
-        // Aqui você enviaria os dados para um banco de dados via Fetch API
-        alert(`Sucesso! O cliente ${nome} foi cadastrado (simulação).`);
-        
-        form.reset(); // Limpa o formulário
-    });
-});
+        const novoCliente = {
+            nome: document.getElementById('nome').value,
+            cidade: document.getElementById('cidade').
