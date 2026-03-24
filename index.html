@@ -2,20 +2,30 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Nave: Galactic Edition</title>
+    <title>Nave Estelar - Versão Final</title>
     <style>
         body { margin: 0; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Courier New', monospace; }
-        canvas { border: 4px solid #444; }
-        #ui { position: absolute; top: 20px; left: 20px; text-shadow: 2px 2px #000; pointer-events: none; }
+        canvas { border: 4px solid #444; background: #000; display: none; }
+        #ui { position: absolute; top: 20px; left: 20px; text-shadow: 2px 2px #000; z-index: 10; pointer-events: none; display: none; }
+        #menu { text-align: center; z-index: 20; }
+        button { padding: 15px 30px; font-size: 20px; cursor: pointer; background: #00ffcc; border: none; font-family: 'Courier New', monospace; font-weight: bold; }
+        .info { font-size: 18px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
+
+    <div id="menu">
+        <h1>NAVE ESTELAR</h1>
+        <p>Use A/D ou Setas para mover e ESPAÇO para atirar</p>
+        <button onclick="iniciarJogo()">JOGAR!</button>
+    </div>
 
     <div id="ui">
         <div class="info">Pontos: <span id="pontos">0</span></div>
         <div class="info">Vidas: <span id="vidas">3</span></div>
         <div id="status-power" style="color: cyan;"></div>
     </div>
+    
     <canvas id="gameCanvas"></canvas>
 
     <script>
@@ -23,28 +33,50 @@
         const ctx = canvas.getContext("2d");
         canvas.width = 400; canvas.height = 600;
 
-        // --- CARREGAMENTO DE IMAGENS ---
+        // --- IMAGENS (Links de exemplo) ---
         const imgNave = new Image();
-        imgNave.src = 'nave.png'; // Substitua pelo caminho da sua imagem
-        
+        imgNave.src = 'https://i.imgur.com/6S79m7v.png'; 
         const imgAsteroide = new Image();
-        imgAsteroide.src = 'asteroide.png'; // Substitua pelo caminho da sua imagem
-
+        imgAsteroide.src = 'https://i.imgur.com/8Bv9szM.png';
         const imgFundo = new Image();
-        imgFundo.src = 'fundo.jpg'; // Substitua pelo caminho da sua imagem
+        imgFundo.src = 'https://i.imgur.com/re9ZpX9.jpg';
 
-        let pontos = 0; let vidas = 3; let jogoAtivo = true;
-        const nave = { x: 185, y: 540, w: 40, h: 40, vel: 8, escudo: false };
-        const asteroides = []; const tiros = []; const powerups = [];
-        const teclas = {};
+        // --- ÁUDIO SINTETIZADO ---
+        let audioCtx;
+        function som(freq, tipo, tempo) {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = tipo;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + tempo);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + tempo);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + tempo);
+        }
+
+        let pontos = 0; let vidas = 3; let jogoAtivo = false;
+        const nave = { x: 180, y: 530, w: 40, h: 40, vel: 8 };
+        const asteroides = []; const tiros = []; const teclas = {};
 
         window.addEventListener("keydown", (e) => {
             teclas[e.key] = true;
             if (e.key === " " && jogoAtivo) {
-                tiros.push({ x: nave.x + nave.w/2 - 2, y: nave.y, w: 4, h: 10, vel: 10 });
+                tiros.push({ x: nave.x + 18, y: nave.y, w: 4, h: 10, vel: 10 });
+                som(500, 'triangle', 0.1);
             }
         });
         window.addEventListener("keyup", (e) => teclas[e.key] = false);
+
+        function iniciarJogo() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            document.getElementById("menu").style.display = "none";
+            document.getElementById("ui").style.display = "block";
+            canvas.style.display = "block";
+            jogoAtivo = true;
+            loop();
+        }
 
         function atualizar() {
             if (!jogoAtivo) return;
@@ -53,65 +85,62 @@
             if ((teclas["ArrowRight"] || teclas["d"]) && nave.x < canvas.width - nave.w) nave.x += nave.vel;
 
             if (Math.random() < 0.02) {
-                const tam = Math.random() * 30 + 30;
-                asteroides.push({ x: Math.random() * (canvas.width - tam), y: -tam, w: tam, h: tam, vel: Math.random() * 2 + 3 });
+                const tam = 40;
+                asteroides.push({ x: Math.random() * (canvas.width - tam), y: -tam, w: tam, h: tam, vel: 3 + (pontos/20) });
             }
 
-            // Movimentação de tiros e asteroides (Lógica simplificada para o exemplo)
-            asteroides.forEach((a, i) => {
-                a.y += a.vel;
-                if (a.y > canvas.height) { asteroides.splice(i, 1); pontos++; }
-                // Colisão com Nave
-                if (nave.x < a.x + a.w && nave.x + nave.w > a.x && nave.y < a.y + a.h) {
-                    vidas--; asteroides.splice(i, 1);
-                    if(vidas <= 0) location.reload();
+            for (let i = asteroides.length - 1; i >= 0; i--) {
+                let a = asteroides[i]; a.y += a.vel;
+                
+                // Colisão Nave
+                if (nave.x < a.x + a.w && nave.x + nave.w > a.x && nave.y < a.y + a.h && nave.y + nave.h > a.y) {
+                    vidas--; som(150, 'sawtooth', 0.3); asteroides.splice(i, 1);
+                    if(vidas <= 0) { alert("GAME OVER! Pontos: " + pontos); location.reload(); }
                 }
-            });
 
-            tiros.forEach((t, i) => {
-                t.y -= t.vel;
-                if (t.y < 0) tiros.splice(i, 1);
-            });
+                // Colisão Tiro
+                for(let j = tiros.length-1; j >= 0; j--) {
+                    let t = tiros[j];
+                    if (t.x < a.x + a.w && t.x + t.w > a.x && t.y < a.y + a.h) {
+                        asteroides.splice(i, 1); tiros.splice(j, 1); pontos += 2;
+                        som(100, 'sine', 0.1); break;
+                    }
+                }
+                if (a && a.y > canvas.height) { asteroides.splice(i, 1); pontos++; }
+            }
 
+            tiros.forEach((t, i) => { t.y -= t.vel; if(t.y < 0) tiros.splice(i, 1); });
             document.getElementById("pontos").innerText = pontos;
             document.getElementById("vidas").innerText = vidas;
         }
 
         function desenhar() {
-            // Desenha o Fundo
-            if (imgFundo.complete) {
-                ctx.drawImage(imgFundo, 0, 0, canvas.width, canvas.height);
-            } else {
-                ctx.fillStyle = "black";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Fundo
+            if (imgFundo.complete) ctx.drawImage(imgFundo, 0, 0, canvas.width, canvas.height);
+            else { ctx.fillStyle = "#001"; ctx.fillRect(0,0,400,600); }
 
-            // Desenha a Nave
-            if (imgNave.complete) {
-                ctx.drawImage(imgNave, nave.x, nave.y, nave.w, nave.h);
-            } else {
-                ctx.fillStyle = "lime";
-                ctx.fillRect(nave.x, nave.y, nave.w, nave.h);
-            }
+            // Nave
+            if (imgNave.complete) ctx.drawImage(imgNave, nave.x, nave.y, nave.w, nave.h);
+            else { ctx.fillStyle = "cyan"; ctx.fillRect(nave.x, nave.y, nave.w, nave.h); }
 
-            // Desenha Asteroides
+            // Asteroides
             asteroides.forEach(a => {
-                if (imgAsteroide.complete) {
-                    ctx.drawImage(imgAsteroide, a.x, a.y, a.w, a.h);
-                } else {
-                    ctx.fillStyle = "gray";
-                    ctx.fillRect(a.x, a.y, a.w, a.h);
-                }
+                if (imgAsteroide.complete) ctx.drawImage(imgAsteroide, a.x, a.y, a.w, a.h);
+                else { ctx.fillStyle = "orange"; ctx.fillRect(a.x, a.y, a.w, a.h); }
             });
 
             // Tiros
             ctx.fillStyle = "red";
             tiros.forEach(t => ctx.fillRect(t.x, t.y, t.w, t.h));
-
-            requestAnimationFrame(() => { atualizar(); desenhar(); });
         }
 
-        desenhar();
+        function loop() {
+            atualizar();
+            desenhar();
+            if (jogoAtivo) requestAnimationFrame(loop);
+        }
     </script>
 </body>
 </html>
