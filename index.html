@@ -2,34 +2,33 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Star Battle: Rebel Alliance</title>
+    <title>Star Wars: Galactic Infinite Battle</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: #ffe81f; font-family: 'Arial Black', Gadget, sans-serif; }
-        canvas { border: 2px solid #ffe81f; background: #000; display: none; box-shadow: 0 0 20px rgba(255, 232, 31, 0.3); }
+        body { margin: 0; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: #ffe81f; font-family: 'Arial Black', sans-serif; }
+        canvas { border: 2px solid #ffe81f; background: #000; display: none; box-shadow: 0 0 30px rgba(255, 232, 31, 0.2); }
         #menu { text-align: center; border: 3px solid #ffe81f; padding: 50px; background: rgba(0,0,0,0.9); border-radius: 10px; }
-        h1 { font-size: 40px; letter-spacing: 10px; margin-bottom: 10px; text-transform: uppercase; }
-        button { padding: 15px 40px; font-size: 20px; cursor: pointer; background: #ffe81f; border: none; font-weight: bold; color: black; border-radius: 5px; transition: 0.3s; }
+        button { padding: 15px 40px; font-size: 22px; cursor: pointer; background: #ffe81f; border: none; font-weight: bold; color: #000; transition: 0.3s; }
         button:hover { background: #fff; transform: scale(1.1); }
-        #ui { position: absolute; top: 20px; left: 20px; display: none; font-size: 18px; text-shadow: 2px 2px #000; color: #ffe81f; }
-        .boss-hp-bar { width: 300px; height: 12px; background: #222; border: 2px solid #fff; display: none; margin-top: 5px; }
-        #boss-hp-fill { width: 100%; height: 100%; background: #f00; box-shadow: 0 0 10px #f00; }
+        #ui { position: absolute; top: 20px; left: 20px; display: none; font-size: 18px; text-shadow: 2px 2px #000; }
+        .boss-bar { width: 300px; height: 12px; background: #222; border: 2px solid #fff; display: none; margin-top: 5px; }
+        #boss-hp { width: 100%; height: 100%; background: #f00; box-shadow: 0 0 10px #f00; }
     </style>
 </head>
 <body>
 
     <div id="menu">
-        <h1>STAR BATTLE</h1>
-        <p style="color: white; margin-bottom: 30px;">QUE A FORÇA ESTEJA COM VOCÊ</p>
+        <h1>STAR WARS</h1>
+        <p>Batalha Galáctica Infinita</p>
         <p>RECORDE: <span id="hs-menu">0</span></p>
-        <button onclick="iniciar()">INICIAR ATAQUE</button>
+        <button onclick="iniciar()">DECOLAR X-WING</button>
     </div>
 
     <div id="ui">
-        CREDITOS: <b id="pts">0</b> | ESCUDOS: <b id="vds">3</b><br>
+        PONTOS: <b id="pts">0</b> | ESCUDOS: <b id="vds">3</b><br>
         <span id="pwr-text" style="color: #00ffff;"></span>
         <div id="boss-ui">
-            <div id="boss-label" style="color: #ff0000; font-size: 14px; margin-top: 10px; font-weight: bold;">DESTROIER IMPERIAL APREENSIVO</div>
-            <div class="boss-hp-bar" id="boss-cont"><div id="boss-hp-fill"></div></div>
+            <div id="boss-label" style="color: #ff0000; font-weight: bold; margin-top: 10px;">DESTRUIDOR ESTELAR</div>
+            <div class="boss-bar" id="boss-container"><div id="boss-hp"></div></div>
         </div>
     </div>
 
@@ -40,183 +39,157 @@
         const ctx = canvas.getContext("2d");
         canvas.width = 450; canvas.height = 650;
 
-        // --- ASSETS ESTILO STAR WARS ---
-        const imgXwing = new Image(); imgXwing.src = 'https://i.imgur.com/6S79m7v.png'; // Nave Rebelde
-        const imgTie = new Image(); imgTie.src = 'https://i.imgur.com/8Bv9szM.png';   // Caça Imperial
-        const imgEspaco = new Image(); imgEspaco.src = 'https://i.imgur.com/re9ZpX9.jpg'; // Galáxia
-        const imgDestroyer = new Image(); imgDestroyer.src = 'https://i.imgur.com/WvXGjYp.png'; // Grande Nave
+        // --- IMAGENS REAIS (LINKS QUE VOCÊ PEDIU) ---
+        const imgNave = new Image(); imgNave.src = 'http://googleusercontent.com/image_collection/image_retrieval/17266641394254757826_0';
+        const imgMeteoro = new Image(); imgMeteoro.src = 'http://googleusercontent.com/image_collection/image_retrieval/3103048708691750151_0';
+        const imgFundo = new Image(); imgFundo.src = 'http://googleusercontent.com/image_collection/image_retrieval/9520908051246567451_0';
+        const imgBoss = new Image(); imgBoss.src = 'https://i.imgur.com/WvXGjYp.png';
 
-        let pontos = 0, vidas = 3, ativo = false, audioCtx, recorde = localStorage.getItem("sw_rec") || 0;
-        let pBoss = 150, bNivel = 1;
-        const nave = { x: 200, y: 550, w: 50, h: 50, esc: false, trip: false };
-        const tiros = [], inimigos = [], tirosInim = [], powers = [], estrelas = [];
-        const teclas = {};
-        let boss = { ativo: false, x: 150, y: -120, w: 150, h: 90, hp: 40, max: 40, dir: 1 };
-
+        let pontos = 0, vidas = 3, ativo = false, audioCtx;
+        let recorde = localStorage.getItem("sw_recorde") || 0;
+        let proximoBoss = 150;
         document.getElementById("hs-menu").innerText = recorde;
 
-        // --- SONS ESTILO LASER CINEMA ---
-        function playLaser(freq, dur, type = 'square') {
-            if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + dur);
-            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + dur);
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + dur);
-        }
+        const nave = { x: 200, y: 550, w: 60, h: 60, esc: false, trip: false };
+        const tiros = [], inimigos = [], tirosInim = [], powers = [];
+        const teclas = {};
+        let boss = { ativo: false, x: 100, y: -120, w: 200, h: 100, hp: 30, max: 30, dir: 1, nivel: 1 };
 
-        function iniciar() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            document.getElementById("menu").style.display = "none";
-            document.getElementById("ui").style.display = "block";
-            canvas.style.display = "block";
-            ativo = true; loop();
+        // Sons de Cinema
+        function som(f, t, d, gVal = 0.05) {
+            if(!audioCtx) return;
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+            o.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + d);
+            g.gain.setValueAtTime(gVal, audioCtx.currentTime);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + d);
         }
 
         window.onkeydown = e => { teclas[e.key] = true; if(e.key === " " && ativo) atirar(); };
         window.onkeyup = e => teclas[e.key] = false;
 
         function atirar() {
-            const corLaser = nave.trip ? "#00ffff" : "#f00"; // Vermelho estilo Rebelde
-            tiros.push({x: nave.x + 23, y: nave.y, w: 3, h: 20, vx: 0, color: corLaser});
+            tiros.push({x: nave.x + 28, y: nave.y, w: 4, h: 20, vx: 0});
             if(nave.trip) {
-                tiros.push({x: nave.x + 23, y: nave.y, w: 3, h: 20, vx: -3, color: corLaser});
-                tiros.push({x: nave.x + 23, y: nave.y, w: 3, h: 20, vx: 3, color: corLaser});
+                tiros.push({x: nave.x + 28, y: nave.y, w: 4, h: 20, vx: -3});
+                tiros.push({x: nave.x + 28, y: nave.y, w: 4, h: 20, vx: 3});
             }
-            playLaser(440, 0.15);
+            som(440, 'square', 0.1);
+        }
+
+        function iniciar() {
+            audioCtx = new AudioContext();
+            document.getElementById("menu").style.display = "none";
+            document.getElementById("ui").style.display = "block";
+            canvas.style.display = "block";
+            ativo = true; loop();
         }
 
         function loop() {
             if(!ativo) return;
-            ctx.clearRect(0,0,450,650);
             
-            // Fundo Galáctico
-            if(imgEspaco.complete) ctx.drawImage(imgEspaco, 0, 0, 450, 650);
-            else { ctx.fillStyle = "#000"; ctx.fillRect(0,0,450,650); }
+            // Fundo
+            if(imgFundo.complete) ctx.drawImage(imgFundo, 0, 0, 450, 650);
+            else { ctx.fillStyle = "black"; ctx.fillRect(0,0,450,650); }
 
-            // Movimento suave
+            // Movimento Nave
             if((teclas.ArrowLeft || teclas.a) && nave.x > 0) nave.x -= 8;
-            if((teclas.ArrowRight || teclas.d) && nave.x < 400) nave.x += 8;
+            if((teclas.ArrowRight || teclas.d) && nave.x < 390) nave.x += 8;
 
-            // Sistema de Boss (Destroier Imperial)
-            if(!boss.ativo && pontos >= pBoss) {
-                boss.ativo = true; boss.hp = 40 * bNivel; boss.max = boss.hp;
-                document.getElementById("boss-cont").style.display = "block";
-                playLaser(100, 0.5, 'sawtooth'); // Som de alerta
+            // Lógica do Boss Infinito
+            if(!boss.ativo && pontos >= proximoBoss) {
+                boss.ativo = true; boss.hp = 30 + (boss.nivel * 20); boss.max = boss.hp;
+                document.getElementById("boss-container").style.display = "block";
+                som(100, 'sawtooth', 0.5);
             }
 
             if(boss.ativo) {
-                if(boss.y < 50) boss.y += 1;
-                boss.x += boss.dir * (1.5 + bNivel);
-                if(boss.x <= 0 || boss.x >= 300) boss.dir *= -1;
-                if(Math.random() < 0.05) {
-                    tirosInim.push({x: boss.x + boss.w/2, y: boss.y + boss.h});
-                    playLaser(200, 0.2, 'sine'); // Laser verde do império
-                }
-                if(imgDestroyer.complete) ctx.drawImage(imgDestroyer, boss.x, boss.y, boss.w, boss.h);
-                else { ctx.fillStyle = "gray"; ctx.fillRect(boss.x, boss.y, boss.w, boss.h); }
+                boss.y = Math.min(boss.y + 1, 50); boss.x += boss.dir * (2 + boss.nivel);
+                if(boss.x <= 0 || boss.x >= 250) boss.dir *= -1;
+                if(Math.random() < 0.04) tirosInim.push({x: boss.x + boss.w/2, y: boss.y + boss.h});
+                if(imgBoss.complete) ctx.drawImage(imgBoss, boss.x, boss.y, boss.w, boss.h);
+                else { ctx.fillStyle = "red"; ctx.fillRect(boss.x, boss.y, boss.w, boss.h); }
             } else {
-                if(Math.random() < 0.04) inimigos.push({x: Math.random()*410, y: -50, v: 4 + (pontos/400)});
+                if(Math.random() < 0.03) inimigos.push({x: Math.random()*400, y: -60, v: 4 + (pontos/500)});
             }
 
-            // Power-ups (Cristais Kyber)
-            if(Math.random() < 0.003) powers.push({x: Math.random()*400, y: -30, t: Math.random()>0.5?'escudo':'tiro'});
+            if(Math.random() < 0.002) powers.push({x: Math.random()*400, y: -30, t: Math.random()>0.5?'escudo':'tiro'});
 
-            atualizarJogo();
+            atualizarTudo();
 
-            // Desenhar X-Wing
-            ctx.shadowBlur = nave.esc ? 20 : 0;
-            ctx.shadowColor = "#00ffff";
-            if(imgXwing.complete) ctx.drawImage(imgXwing, nave.x, nave.y, nave.w, nave.h);
-            else { ctx.fillStyle = "white"; ctx.fillRect(nave.x, nave.y, nave.w, nave.h); }
-            ctx.shadowBlur = 0;
+            // Desenha X-Wing
+            if(imgNave.complete) {
+                if(nave.esc) { ctx.shadowBlur = 20; ctx.shadowColor = "cyan"; }
+                ctx.drawImage(imgNave, nave.x, nave.y, nave.w, nave.h);
+                ctx.shadowBlur = 0;
+            } else { ctx.fillStyle = "white"; ctx.fillRect(nave.x, nave.y, nave.w, nave.h); }
 
+            if(pontos > recorde) { recorde = pontos; localStorage.setItem("sw_recorde", recorde); }
             document.getElementById("pts").innerText = pontos;
             document.getElementById("vds").innerText = vidas;
-            if(vidas <= 0) gameOver();
+            if(vidas <= 0) { alert("A FORÇA SE FOI... SCORE: " + pontos); location.reload(); }
             requestAnimationFrame(loop);
         }
 
-        function atualizarJogo() {
+        function atualizarTudo() {
             // Tiros Laser
             tiros.forEach((t, i) => {
                 t.y -= 15; t.x += t.vx;
-                ctx.fillStyle = t.color;
-                ctx.shadowBlur = 10; ctx.shadowColor = t.color;
-                ctx.fillRect(t.x, t.y, t.w, t.h);
-                ctx.shadowBlur = 0;
+                ctx.fillStyle = "#f00"; ctx.shadowBlur = 10; ctx.shadowColor = "red";
+                ctx.fillRect(t.x, t.y, t.w, t.h); ctx.shadowBlur = 0;
                 if(t.y < 0) tiros.splice(i, 1);
-                
                 if(boss.ativo && t.x > boss.x && t.x < boss.x + boss.w && t.y < boss.y + boss.h) {
                     boss.hp--; tiros.splice(i, 1);
-                    document.getElementById("boss-hp-fill").style.width = (boss.hp/boss.max*100) + "%";
+                    document.getElementById("boss-hp").style.width = (boss.hp/boss.max*100) + "%";
                     if(boss.hp <= 0) {
-                        boss.ativo = false; bNivel++; pontos += 500; pBoss += 1000;
-                        document.getElementById("boss-cont").style.display = "none";
-                        playLaser(50, 0.8, 'sawtooth');
+                        boss.ativo = false; boss.nivel++; pontos += 500; proximoBoss += 800;
+                        document.getElementById("boss-container").style.display = "none";
+                        som(60, 'sawtooth', 0.5);
                     }
                 }
             });
 
-            // Tiros do Império (Verde)
+            // Tiros Inimigos
             tirosInim.forEach((t, i) => {
-                t.y += 8;
-                ctx.fillStyle = "#0f0";
-                ctx.shadowBlur = 8; ctx.shadowColor = "#0f0";
-                ctx.fillRect(t.x, t.y, 4, 15);
-                ctx.shadowBlur = 0;
-                if(t.x > nave.x && t.x < nave.x+50 && t.y > nave.y && t.y < nave.y+50) {
-                    tirosInim.splice(i, 1); if(!nave.esc) { vidas--; playLaser(60, 0.3, 'sawtooth'); }
+                t.y += 8; ctx.fillStyle = "#0f0"; ctx.fillRect(t.x, t.y, 4, 15);
+                if(t.x > nave.x && t.x < nave.x+60 && t.y > nave.y && t.y < nave.y+60) {
+                    tirosInim.splice(i, 1); if(!nave.esc) vidas--; som(80, 'sawtooth', 0.2);
                 }
                 if(t.y > 650) tirosInim.splice(i, 1);
             });
 
-            // Caças TIE
+            // Meteoros
             inimigos.forEach((m, i) => {
                 m.y += m.v;
-                if(imgTie.complete) ctx.drawImage(imgTie, m.x, m.y, 40, 40);
-                else { ctx.fillStyle = "gray"; ctx.beginPath(); ctx.arc(m.x+20, m.y+20, 15, 0, 7); ctx.fill(); }
-                
-                if(nave.x < m.x + 35 && nave.x + 50 > m.x && nave.y < m.y + 40 && nave.y + 40 > m.y) {
-                    inimigos.splice(i, 1); if(!nave.esc) { vidas--; playLaser(60, 0.3, 'sawtooth'); }
+                if(imgMeteoro.complete) ctx.drawImage(imgMeteoro, m.x, m.y, 50, 50);
+                else { ctx.fillStyle = "gray"; ctx.fillRect(m.x, m.y, 50, 50); }
+                if(nave.x < m.x + 40 && nave.x + 60 > m.x && nave.y < m.y + 40) {
+                    inimigos.splice(i, 1); if(!nave.esc) vidas--; som(80, 'sawtooth', 0.2);
                 }
                 tiros.forEach((t, ti) => {
-                    if(t.x > m.x && t.x < m.x + 40 && t.y < m.y + 40 && t.y > m.y) {
-                        inimigos.splice(i, 1); tiros.splice(ti, 1); pontos += 20;
-                        playLaser(200, 0.1);
+                    if(t.x > m.x && t.x < m.x + 50 && t.y < m.y + 50) {
+                        inimigos.splice(i, 1); tiros.splice(ti, 1); pontos += 10;
                     }
                 });
                 if(m.y > 650) inimigos.splice(i, 1);
             });
 
-            // Cristais Kyber (Power-ups)
+            // Power-ups
             powers.forEach((p, i) => {
-                p.y += 3;
-                ctx.fillStyle = p.t === 'escudo' ? "#0af" : "#f0f";
-                ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
-                ctx.beginPath(); ctx.moveTo(p.x+10, p.y); ctx.lineTo(p.x+20, p.y+15); ctx.lineTo(p.x+10, p.y+30); ctx.lineTo(p.x, p.y+15); ctx.fill();
-                ctx.shadowBlur = 0;
-                if(nave.x < p.x + 20 && nave.x + 50 > p.x && nave.y < p.y + 50) {
+                p.y += 3; ctx.fillStyle = p.t==='escudo'?'#0af':'#f0f';
+                ctx.beginPath(); ctx.arc(p.x+10, p.y+10, 12, 0, 7); ctx.fill();
+                if(nave.x < p.x + 30 && nave.x + 60 > p.x && nave.y < p.y + 60) {
                     if(p.t === 'escudo') {
-                        nave.esc = true; document.getElementById("pwr-text").innerText = "ESCUDO REFORÇADO";
+                        nave.esc = true; document.getElementById("pwr-text").innerText = "ESCUDO!";
                         setTimeout(() => { nave.esc = false; document.getElementById("pwr-text").innerText = ""; }, 8000);
                     } else {
-                        nave.trip = true; document.getElementById("pwr-text").innerText = "CANHÕES TRIPLOS";
+                        nave.trip = true; document.getElementById("pwr-text").innerText = "TIRO TRIPLO!";
                         setTimeout(() => { nave.trip = false; document.getElementById("pwr-text").innerText = ""; }, 12000);
                     }
-                    powers.splice(i, 1); playLaser(800, 0.3, 'sine');
+                    powers.splice(i, 1); som(800, 'sine', 0.2);
                 }
             });
-        }
-
-        function gameOver() {
-            if(pontos > recorde) localStorage.setItem("sw_rec", pontos);
-            alert("A ESTRELA DA MORTE VENCEU... PONTOS: " + pontos);
-            location.reload();
         }
     </script>
 </body>
