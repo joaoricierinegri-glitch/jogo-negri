@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Star Wars: Galactic Resistance</title>
+    <title>Star Wars: Galactic Resistance - ULTRA FIXED</title>
     <style>
         body { margin: 0; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: #ffe81f; font-family: 'Arial Black', sans-serif; }
         canvas { border: 3px solid #ffe81f; background: #000; display: none; box-shadow: 0 0 20px #ffe81f; }
@@ -18,7 +18,7 @@
 
     <div id="menu">
         <h1 style="font-size: 45px; margin: 0;">STAR WARS</h1>
-        <p style="color: #fff;">BATALHA GALÁCTICA</p>
+        <p style="color: #fff;">BATALHA GALÁCTICA PRO</p>
         <p>RECORDE: <span id="hs-menu">0</span></p>
         <button onclick="iniciar()">DECOLAR X-WING</button>
     </div>
@@ -39,7 +39,7 @@
         const ctx = canvas.getContext("2d");
         canvas.width = 500; canvas.height = 700;
 
-        // --- CARREGAMENTO DE IMAGENS ---
+        // --- IMAGENS COM LOGICA DE VERIFICAÇÃO ---
         const imgNave = new Image(); imgNave.src = 'https://i.imgur.com/6S79m7v.png';
         const imgMeteoro = new Image(); imgMeteoro.src = 'https://i.imgur.com/8Bv9szM.png';
         const imgFundo = new Image(); imgFundo.src = 'https://i.imgur.com/re9ZpX9.jpg';
@@ -50,9 +50,20 @@
         const nave = { x: 220, y: 600, w: 60, h: 60, esc: false, trip: false };
         const tiros = [], inimigos = [], tirosInim = [], powers = [];
         const teclas = {};
-        let boss = { ativo: false, x: 150, y: -150, w: 200, h: 100, hp: 50, max: 50, dir: 1 };
+        let boss = { ativo: false, x: 150, y: -150, w: 220, h: 100, hp: 50, max: 50, dir: 1 };
 
         document.getElementById("hs-menu").innerText = recorde;
+
+        // --- DESENHOS DE EMERGÊNCIA (VETORIAIS) ---
+        function desenharXWingReserva(x, y) {
+            ctx.strokeStyle = "#fff"; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(x+30, y); ctx.lineTo(x+10, y+50); ctx.lineTo(x+50, y+50); ctx.closePath(); ctx.stroke();
+            ctx.fillStyle = "red"; ctx.fillRect(x+25, y+20, 10, 10);
+        }
+
+        function desenharMeteoroReserva(x, y) {
+            ctx.fillStyle = "#666"; ctx.beginPath(); ctx.arc(x+25, y+25, 20, 0, Math.PI*2); ctx.fill();
+        }
 
         function playSfx(freq, type, dur) {
             if(!audioCtx) return;
@@ -60,7 +71,7 @@
             const g = audioCtx.createGain();
             osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + dur);
-            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
             osc.connect(g); g.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + dur);
         }
@@ -87,16 +98,18 @@
 
         function loop() {
             if(!ativo) return;
+            
+            // Fundo (Se a imagem do Imgur falhar ou for aquele erro de "não existe", usa fundo preto)
+            if(imgFundo.complete && imgFundo.naturalWidth > 100) {
+                ctx.drawImage(imgFundo, 0, 0, 500, 700);
+            } else {
+                ctx.fillStyle = "#000b1a"; ctx.fillRect(0,0,500,700);
+                ctx.fillStyle = "white"; for(let i=0;i<20;i++) ctx.fillRect(Math.random()*500, Math.random()*700, 2, 2);
+            }
 
-            // Fundo
-            if(imgFundo.complete && imgFundo.naturalWidth !== 0) ctx.drawImage(imgFundo, 0, 0, 500, 700);
-            else { ctx.fillStyle = "#000510"; ctx.fillRect(0,0,500,700); }
-
-            // Movimento
             if((teclas.ArrowLeft || teclas.KeyA) && nave.x > 0) nave.x -= 8;
             if((teclas.ArrowRight || teclas.KeyD) && nave.x < 440) nave.x += 8;
 
-            // Logica do Boss
             if(!boss.ativo && pontos >= pBoss) {
                 boss.ativo = true; boss.hp = 50 + (bNivel * 20); boss.max = boss.hp;
                 document.getElementById("boss-cont").style.display = "block";
@@ -105,24 +118,26 @@
 
             if(boss.ativo) {
                 boss.y = Math.min(boss.y + 1, 60); boss.x += boss.dir * (2 + bNivel);
-                if(boss.x <= 0 || boss.x >= 300) boss.dir *= -1;
-                if(Math.random() < 0.05) tirosInim.push({x: boss.x + 100, y: boss.y + 100});
-                if(imgBoss.complete && imgBoss.naturalWidth !== 0) ctx.drawImage(imgBoss, boss.x, boss.y, boss.w, boss.h);
+                if(boss.x <= 0 || boss.x >= 280) boss.dir *= -1;
+                if(Math.random() < 0.05) tirosInim.push({x: boss.x + 110, y: boss.y + 80});
+                if(imgBoss.complete && imgBoss.naturalWidth > 100) ctx.drawImage(imgBoss, boss.x, boss.y, boss.w, boss.h);
                 else { ctx.fillStyle = "red"; ctx.fillRect(boss.x, boss.y, boss.w, boss.h); }
             } else {
-                if(Math.random() < 0.04) inimigos.push({x: Math.random()*450, y: -60, v: 4 + (pontos/500)});
+                if(Math.random() < 0.04) inimigos.push({x: Math.random()*440, y: -60, v: 4 + (pontos/600)});
             }
 
-            // Powerups
             if(Math.random() < 0.003) powers.push({x: Math.random()*460, y: -40, t: Math.random()>0.5?'escudo':'tiro'});
 
             atualizarTudo();
 
-            // Desenhar Nave
+            // DESENHAR NAVE (Com proteção contra erro de imagem)
             ctx.save();
             if(nave.esc) { ctx.shadowBlur = 20; ctx.shadowColor = "#0ff"; }
-            if(imgNave.complete && imgNave.naturalWidth !== 0) ctx.drawImage(imgNave, nave.x, nave.y, nave.w, nave.h);
-            else { ctx.fillStyle = "#fff"; ctx.fillRect(nave.x, nave.y, nave.w, nave.h); }
+            if(imgNave.complete && imgNave.naturalWidth > 100) {
+                ctx.drawImage(imgNave, nave.x, nave.y, nave.w, nave.h);
+            } else {
+                desenharXWingReserva(nave.x, nave.y);
+            }
             ctx.restore();
 
             document.getElementById("pts").innerText = pontos;
@@ -135,10 +150,10 @@
         }
 
         function atualizarTudo() {
-            // Tiros Jogador
             tiros.forEach((t, i) => {
                 t.y -= 15; t.x += t.vx;
-                ctx.fillStyle = "#f00"; ctx.fillRect(t.x, t.y, t.w, t.h);
+                ctx.fillStyle = "#f00"; ctx.shadowBlur = 10; ctx.shadowColor = "red";
+                ctx.fillRect(t.x, t.y, t.w, t.h); ctx.shadowBlur = 0;
                 if(t.y < 0) tiros.splice(i, 1);
                 if(boss.ativo && t.x > boss.x && t.x < boss.x + boss.w && t.y < boss.y + boss.h) {
                     boss.hp--; tiros.splice(i, 1);
@@ -151,7 +166,6 @@
                 }
             });
 
-            // Tiros Inimigos
             tirosInim.forEach((t, i) => {
                 t.y += 8; ctx.fillStyle = "#0f0"; ctx.fillRect(t.x, t.y, 5, 15);
                 if(t.x > nave.x && t.x < nave.x+60 && t.y > nave.y && t.y < nave.y+60) {
@@ -160,11 +174,13 @@
                 if(t.y > 700) tirosInim.splice(i, 1);
             });
 
-            // Meteoros
             inimigos.forEach((m, i) => {
                 m.y += m.v;
-                if(imgMeteoro.complete && imgMeteoro.naturalWidth !== 0) ctx.drawImage(imgMeteoro, m.x, m.y, 55, 55);
-                else { ctx.fillStyle = "#666"; ctx.fillRect(m.x, m.y, 50, 50); }
+                if(imgMeteoro.complete && imgMeteoro.naturalWidth > 100) {
+                    ctx.drawImage(imgMeteoro, m.x, m.y, 55, 55);
+                } else {
+                    desenharMeteoroReserva(m.x, m.y);
+                }
                 if(nave.x < m.x + 45 && nave.x + 60 > m.x && nave.y < m.y + 45) {
                     inimigos.splice(i, 1); if(!nave.esc) { vidas--; playSfx(50, 'sawtooth', 0.2); }
                 }
@@ -176,7 +192,6 @@
                 if(m.y > 700) inimigos.splice(i, 1);
             });
 
-            // Powerups
             powers.forEach((p, i) => {
                 p.y += 3; ctx.fillStyle = p.t==='escudo'?'#0af':'#f0f';
                 ctx.beginPath(); ctx.arc(p.x+15, p.y+15, 12, 0, 7); ctx.fill();
