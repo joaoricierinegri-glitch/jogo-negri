@@ -2,12 +2,12 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Star Wars: Galactic Resistance - Boss Edition</title>
+    <title>Star Wars: Final Battle</title>
     <style>
         body { margin: 0; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: #ffe81f; font-family: 'Arial Black', sans-serif; }
         canvas { border: 3px solid #ffe81f; background: #000; display: none; box-shadow: 0 0 20px #ffe81f; }
         #menu { text-align: center; border: 3px solid #ffe81f; padding: 50px; background: rgba(0,0,0,0.9); border-radius: 15px; }
-        button { padding: 15px 40px; font-size: 22px; cursor: pointer; background: #ffe81f; border: none; font-weight: bold; color: black; border-radius: 5px; }
+        button { padding: 15px 40px; font-size: 22px; cursor: pointer; background: #ffe81f; border: none; font-weight: bold; color: black; border-radius: 5px; transition: 0.3s; }
         button:hover { background: #fff; transform: scale(1.05); }
         #ui { position: absolute; top: 20px; left: 20px; display: none; font-size: 22px; text-shadow: 2px 2px #000; pointer-events: none; }
         .boss-hp-container { width: 300px; height: 15px; background: #222; border: 2px solid #ff0000; display: none; margin-top: 10px; }
@@ -18,14 +18,12 @@
 
     <div id="menu">
         <h1 style="font-size: 45px; margin: 0;">STAR WARS</h1>
-        <p style="color: #fff;">VERSÃO BOSS ESPECIAL</p>
-        <p>RECORDE: <span id="hs-menu">0</span></p>
-        <button onclick="iniciar()">INICIAR BATALHA</button>
+        <p style="color: #fff;">BATALHA GALÁCTICA PRO</p>
+        <button onclick="iniciar()">DECOLAR X-WING</button>
     </div>
 
     <div id="ui">
         SCORE: <b id="pts">0</b> | <span style="color: #ff4444;">VIDAS: <b id="vds">10</b></span><br>
-        <span id="pwr-text" style="color: #00ffcc; font-weight: bold;"></span>
         <div id="boss-ui">
             <div id="boss-label" style="color: red; font-size: 14px; margin-top: 10px; font-weight: bold;"></div>
             <div class="boss-hp-container" id="boss-cont"><div id="boss-hp-fill"></div></div>
@@ -39,33 +37,18 @@
         const ctx = canvas.getContext("2d");
         canvas.width = 500; canvas.height = 700;
 
-        // --- CARREGAMENTO ---
-        const imgNave = new Image(); imgNave.src = 'https://i.imgur.com/6S79m7v.png';
-        const imgMeteoro = new Image(); imgMeteoro.src = 'https://i.imgur.com/8Bv9szM.png';
-        const imgFundo = new Image(); imgFundo.src = 'https://i.imgur.com/re9ZpX9.jpg';
-        
-        // AQUI ESTÁ O SEU BOSS (Certifique-se que o nome do arquivo está igual ao da imagem salva)
-        const imgBoss = new Image(); imgBoss.src = 'kid-bengala.jpg'; 
+        // --- IMAGENS SELECIONADAS (LINKS DIRETOS) ---
+        const imgNave = new Image(); imgNave.src = 'https://i.imgur.com/6S79m7v.png'; // X-Wing
+        const imgMeteoro = new Image(); imgMeteoro.src = 'https://i.imgur.com/8Bv9szM.png'; // Asteróide
+        const imgFundo = new Image(); imgFundo.src = 'https://i.imgur.com/re9ZpX9.jpg'; // Espaço
+        const imgBoss = new Image(); imgBoss.src = 'https://i.imgur.com/WvXGjYp.png'; // Nave do Boss
 
-        let pontos = 0, vidas = 10, ativo = false, audioCtx, recorde = localStorage.getItem("sw_rec") || 0;
-        let pBoss = 200, bNivel = 1;
-        const nave = { x: 220, y: 600, w: 60, h: 60, esc: false, trip: false };
-        const tiros = [], inimigos = [], tirosInim = [], powers = [];
+        let pontos = 0, vidas = 10, ativo = false, audioCtx;
+        let pBoss = 300, bNivel = 1;
+        const nave = { x: 220, y: 600, w: 60, h: 60, esc: false };
+        const tiros = [], inimigos = [], tirosInim = [];
         const teclas = {};
-        let boss = { ativo: false, x: 150, y: -200, w: 200, h: 200, hp: 100, max: 100, dir: 1 };
-
-        document.getElementById("hs-menu").innerText = recorde;
-
-        function playSfx(freq, type, dur) {
-            if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + dur);
-            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + dur);
-        }
+        let boss = { ativo: false, x: 150, y: -200, w: 200, h: 120, hp: 100, max: 100, dir: 1 };
 
         function iniciar() {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -79,78 +62,57 @@
         window.onkeyup = e => teclas[e.code] = false;
 
         function atirar() {
-            tiros.push({x: nave.x + 28, y: nave.y, w: 4, h: 20, vx: 0});
-            if(nave.trip) {
-                tiros.push({x: nave.x + 28, y: nave.y, w: 4, h: 20, vx: -3});
-                tiros.push({x: nave.x + 28, y: nave.y, w: 4, h: 20, vx: 3});
-            }
-            playSfx(600, 'square', 0.1);
+            tiros.push({x: nave.x + 28, y: nave.y, w: 4, h: 20});
         }
 
         function loop() {
             if(!ativo) return;
             
             // Fundo
-            if(imgFundo.complete && imgFundo.naturalWidth > 50) {
-                ctx.drawImage(imgFundo, 0, 0, 500, 700);
-            } else {
-                ctx.fillStyle = "#000510"; ctx.fillRect(0,0,500,700);
-            }
+            if(imgFundo.complete) ctx.drawImage(imgFundo, 0, 0, 500, 700);
+            else { ctx.fillStyle = "#000"; ctx.fillRect(0,0,500,700); }
 
+            // Movimento
             if((teclas.ArrowLeft || teclas.KeyA) && nave.x > 0) nave.x -= 8;
             if((teclas.ArrowRight || teclas.KeyD) && nave.x < 440) nave.x += 8;
 
-            // Lógica do Boss
+            // Boss
             if(!boss.ativo && pontos >= pBoss) {
-                boss.ativo = true; boss.hp = 100 * bNivel; boss.max = boss.hp;
+                boss.ativo = true; boss.hp = 100; boss.max = 100;
                 document.getElementById("boss-cont").style.display = "block";
-                document.getElementById("boss-label").innerText = "BOSS FINAL APARECEU!";
+                document.getElementById("boss-label").innerText = "ALVO PRIORITÁRIO DETECTADO";
             }
 
             if(boss.ativo) {
                 boss.y = Math.min(boss.y + 1, 50);
-                boss.x += boss.dir * (3 + bNivel);
+                boss.x += boss.dir * 3;
                 if(boss.x <= 0 || boss.x >= 300) boss.dir *= -1;
-                if(Math.random() < 0.07) tirosInim.push({x: boss.x + boss.w/2, y: boss.y + boss.h});
-                
-                if(imgBoss.complete && imgBoss.naturalWidth > 0) {
-                    ctx.drawImage(imgBoss, boss.x, boss.y, boss.w, boss.h);
-                } else {
-                    ctx.fillStyle = "purple"; ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
-                }
+                if(Math.random() < 0.05) tirosInim.push({x: boss.x + boss.w/2, y: boss.y + boss.h});
+                ctx.drawImage(imgBoss, boss.x, boss.y, boss.w, boss.h);
             } else {
-                if(Math.random() < 0.04) inimigos.push({x: Math.random()*450, y: -60, v: 4 + (pontos/500)});
+                if(Math.random() < 0.04) inimigos.push({x: Math.random()*450, y: -60, v: 5});
             }
 
-            if(Math.random() < 0.003) powers.push({x: Math.random()*460, y: -40, t: Math.random()>0.5?'escudo':'tiro'});
+            atualizarJogo();
 
-            atualizarEntidades();
-
-            // Desenhar Nave
-            if(nave.esc) { ctx.shadowBlur = 15; ctx.shadowColor = "cyan"; }
-            if(imgNave.complete && imgNave.naturalWidth > 50) {
-                ctx.drawImage(imgNave, nave.x, nave.y, nave.w, nave.h);
-            } else {
-                ctx.fillStyle = "white"; ctx.fillRect(nave.x, nave.y, nave.w, nave.h);
-            }
-            ctx.shadowBlur = 0;
+            // Nave
+            ctx.drawImage(imgNave, nave.x, nave.y, nave.w, nave.h);
 
             document.getElementById("pts").innerText = pontos;
             document.getElementById("vds").innerText = vidas;
-            if(vidas <= 0) { alert("GAME OVER! SCORE: " + pontos); location.reload(); }
+            if(vidas <= 0) { alert("A ALIANÇA FOI DERROTADA! SCORE: " + pontos); location.reload(); }
             requestAnimationFrame(loop);
         }
 
-        function atualizarEntidades() {
+        function atualizarJogo() {
             tiros.forEach((t, i) => {
-                t.y -= 15; t.x += t.vx;
-                ctx.fillStyle = "red"; ctx.fillRect(t.x, t.y, t.w, t.h);
+                t.y -= 15; ctx.fillStyle = "red"; ctx.fillRect(t.x, t.y, t.w, t.h);
                 if(t.y < 0) tiros.splice(i, 1);
                 if(boss.ativo && t.x > boss.x && t.x < boss.x + boss.w && t.y < boss.y + boss.h) {
                     boss.hp--; tiros.splice(i, 1);
                     document.getElementById("boss-hp-fill").style.width = (boss.hp/boss.max*100) + "%";
                     if(boss.hp <= 0) {
-                        boss.ativo = false; bNivel++; pontos += 2000; pBoss += 3000;
+                        boss.ativo = false; pontos += 2000; pBoss += 5000;
                         document.getElementById("boss-cont").style.display = "none";
                     }
                 }
@@ -159,18 +121,14 @@
             tirosInim.forEach((t, i) => {
                 t.y += 10; ctx.fillStyle = "#0f0"; ctx.fillRect(t.x, t.y, 6, 20);
                 if(t.x > nave.x && t.x < nave.x+60 && t.y > nave.y && t.y < nave.y+60) {
-                    tirosInim.splice(i, 1); if(!nave.esc) vidas--;
+                    tirosInim.splice(i, 1); vidas--;
                 }
-                if(t.y > 700) tirosInim.splice(i, 1);
             });
 
             inimigos.forEach((m, i) => {
-                m.y += m.v;
-                if(imgMeteoro.complete && imgMeteoro.naturalWidth > 50) ctx.drawImage(imgMeteoro, m.x, m.y, 55, 55);
-                else { ctx.fillStyle = "gray"; ctx.beginPath(); ctx.arc(m.x+25, m.y+25, 20, 0, 7); ctx.fill(); }
-                
+                m.y += m.v; ctx.drawImage(imgMeteoro, m.x, m.y, 55, 55);
                 if(nave.x < m.x + 45 && nave.x + 60 > m.x && nave.y < m.y + 45) {
-                    inimigos.splice(i, 1); if(!nave.esc) vidas--;
+                    inimigos.splice(i, 1); vidas--;
                 }
                 tiros.forEach((t, ti) => {
                     if(t.x > m.x && t.x < m.x + 55 && t.y < m.y + 55) {
@@ -178,19 +136,6 @@
                     }
                 });
                 if(m.y > 700) inimigos.splice(i, 1);
-            });
-
-            powers.forEach((p, i) => {
-                p.y += 3; ctx.fillStyle = p.t==='escudo'?'#0af':'#f0f';
-                ctx.beginPath(); ctx.arc(p.x+15, p.y+15, 12, 0, 7); ctx.fill();
-                if(nave.x < p.x + 40 && nave.x + 60 > p.x && nave.y < p.y + 60) {
-                    if(p.t === 'escudo') {
-                        nave.esc = true; setTimeout(() => nave.esc = false, 8000);
-                    } else {
-                        nave.trip = true; setTimeout(() => nave.trip = false, 10000);
-                    }
-                    powers.splice(i, 1);
-                }
             });
         }
     </script>
